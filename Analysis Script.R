@@ -61,15 +61,13 @@ dt2 <- d[!is.na(steps), list(round(mean(steps, na.rm = T),1)),by = 'time']
 setnames(dt2, old = c('time','V1'), new = c('Interval', 'Steps'))
 
 # Identify 5-min interval with highest average number of steps taken across all days.
-maxInterval <- dt2$Interval[match(max(dt2$Steps),dt2$Steps)]
+maxInterval <- match(max(dt2$Steps),dt2$Steps)
+maxIntLab <-  paste(hour(dt2$Interval[maxInterval]),':',minute(dt2$Interval[maxInterval]),' - ',dt2$Steps[maxInterval],' steps',sep = '')
 
 # Plot time series of average steps taken across days (y-axis) by interval (x-axis)
 dt2[, Interval := as.POSIXct(strftime(Interval, format="%H:%M"), format="%H:%M")]
 lines2 <- ggplot(dt2, aes(x = Interval, y = Steps, group=1)) +
   geom_line() +
   scale_x_datetime(labels = date_format("%H:%M")) +
-  geom_vline(xintercept = as.numeric(dt2$Interval[104]))
+  annotate("text", label = maxIntLab, x = dt2$Interval[maxInterval], y = dt2$Steps[maxInterval] + 10, size = 5,fontface = "bold")
 lines2
-
-
-
