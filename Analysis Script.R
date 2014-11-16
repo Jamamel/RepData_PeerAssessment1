@@ -68,6 +68,60 @@ maxIntLab <-  paste(hour(dt2$Interval[maxInterval]),':',minute(dt2$Interval[maxI
 dt2[, Interval := as.POSIXct(strftime(Interval, format="%H:%M"), format="%H:%M")]
 lines2 <- ggplot(dt2, aes(x = Interval, y = Steps, group=1)) +
   geom_line() +
+  geom_point(aes(x = dt2$Interval[maxInterval], y = dt2$Steps[maxInterval]),colour = 'red', size = 3) +
   scale_x_datetime(labels = date_format("%H:%M")) +
   annotate("text", label = maxIntLab, x = dt2$Interval[maxInterval], y = dt2$Steps[maxInterval] + 10, size = 5,fontface = "bold")
 lines2
+
+
+# Analysis to answer question 3 in assignment ==================
+
+# Calculate number of observations with missing values (NA) in "steps"
+nmissing <- nrow(d[,d[is.na(steps)]])
+
+# To impute said missing values, we calculate the average number of steps taken by weekday & interval
+# These will be the values to impute.
+auxdt3 <- d[, list(round(mean(steps, na.rm = T),1)),by = c('weekday','time')]
+setnames(auxdt3,'V1','Steps')
+dt3 <- copy(d)
+dt3[,steps := as.numeric(steps)]
+setkeyv(auxdt3,c('weekday','time'))
+dt3[is.na(steps),steps := auxdt3[dt3[is.na(steps),c('weekday','time'),with = F],'Steps',with = F]]
+
+
+# Calculate total number, mean, and median of steps per day.
+dt3.1 <- dt3[!is.na(steps), list(sum(steps),
+                             round(mean(steps),1),
+                             quantile(steps, .50,)),
+         by = 'date']
+setnames(dt3.1, old = c('V1','V2','V3'), new = c('Steps', 'Mean', 'Median'))
+
+# Plot histogram of Total steps per day
+hist3 <- ggplot(dt3.1, aes(x = Steps)) +
+  geom_histogram()
+hist3
+# If we apply a log10 transformation the 2 outlying observations are easy to find,
+# even with a histogram
+hist3 + scale_x_log10()
+
+dt3.1[, c(1,3,4), with = F]
+
+
+# Analysis to answer question 4 in assignment ==================
+
+# Create "daytype" factor, identifying weekend vs. week days
+dt3[,daytype := factor(ifelse(weekday %in% c('Sun','Sat'),'Weekend','Weekday'))]
+
+# Calculate average number of steps taken across all days by interval and daytype
+dt4 <- dt3[!is.na(steps), list(round(mean(steps, na.rm = T),1)),by = c('time','daytype')]
+setnames(dt4, old = c('time','V1'), new = c('Interval', 'Steps'))
+
+# Plot time series of average steps taken across days (y-axis) by interval (x-axis), using daytype
+# as panel divider.
+dt4[, Interval := as.POSIXct(strftime(Interval, format="%H:%M"), format="%H:%M")]
+lines4 <- ggplot(dt4, aes(x = Interval, y = Steps, group=1)) +
+  geom_line() +
+  scale_x_datetime(labels = date_format("%H:%M")) +
+  facet_grid(daytype ~ .)
+lines4
+
