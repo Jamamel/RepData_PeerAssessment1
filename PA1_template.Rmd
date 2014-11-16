@@ -156,6 +156,22 @@ dt3.1
 hist3
 ```
 
+Overlaying the 2 distributions (before and after imputation) of total steps across intervals by day we confirm imputation has caused the variance to shrink, increasing our distribution kurtosis.
+
+```{r comphist}
+dt1[,Impute := factor(1,levels = 1:2,labels = c('No','Yes'))]
+dt3.1[,Impute := factor(2,levels = 1:2,labels = c('No','Yes'))]
+
+compdt <- rbind(dt3.1,dt1)
+comphist <- ggplot(compdt,aes(x = Steps,colour = Impute,fill = Impute)) +
+  geom_density(color = NA,alpha = 0.5) +
+  xlab("Total Steps") + scale_fill_manual(values=c(No = 'red',Yes = 'green'))
+```
+```{r plotcomphist,echo=FALSE,results='markup'}
+comphist
+```
+
+
 ##Are there differences in activity patterns between weekdays and weekends?
 
 ```{r q4}

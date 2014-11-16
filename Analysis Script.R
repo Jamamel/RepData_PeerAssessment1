@@ -1,3 +1,4 @@
+library(knitr)
 library(data.table)
 library(lubridate)
 library(ggplot2)
@@ -47,11 +48,16 @@ setnames(dt1, old = c('V1','V2','V3'), new = c('Steps', 'Mean', 'Median'))
 # Plot histogram of Total steps per day
 hist1 <- ggplot(dt1, aes(x = Steps)) +
   geom_histogram()
+png(filename = '.\\figure\\q1hist.png')
 hist1
+dev.off()
+
+
 # If we apply a log10 transformation the 2 outlying observations are easy to find,
 # even with a histogram
+png(filename = '.\\figure\\q1histlog.png')
 hist1 + scale_x_log10()
-
+dev.off()
 dt1[, c(1,3,4), with = F]
 
 # Analysis to answer question 2 in assignment ==================
@@ -71,8 +77,10 @@ lines2 <- ggplot(dt2, aes(x = Interval, y = Steps, group=1)) +
   geom_point(aes(x = dt2$Interval[maxInterval], y = dt2$Steps[maxInterval]),colour = 'red', size = 3) +
   scale_x_datetime(labels = date_format("%H:%M")) +
   annotate("text", label = maxIntLab, x = dt2$Interval[maxInterval], y = dt2$Steps[maxInterval] + 10, size = 5,fontface = "bold")
-lines2
 
+png(filename = '.\\figure\\q2lines.png')
+lines2
+dev.off()
 
 # Analysis to answer question 3 in assignment ==================
 
@@ -99,13 +107,25 @@ setnames(dt3.1, old = c('V1','V2','V3'), new = c('Steps', 'Mean', 'Median'))
 # Plot histogram of Total steps per day
 hist3 <- ggplot(dt3.1, aes(x = Steps)) +
   geom_histogram()
+
+png(filename = '.\\figure\\q3hist.png')
 hist3
+dev.off()
 # If we apply a log10 transformation the 2 outlying observations are easy to find,
 # even with a histogram
+png(filename = '.\\figure\\q3histlog.png')
 hist3 + scale_x_log10()
-
+dev.off()
 dt3.1[, c(1,3,4), with = F]
 
+dt1[,Impute := factor(1,levels = 1:2,labels = c('No','Yes'))]
+dt3.1[,Impute := factor(2,levels = 1:2,labels = c('No','Yes'))]
+
+compdt <- rbind(dt1,dt3.1)
+comphist <- ggplot(compdt,aes(x = Steps,colour = Impute,fill = Impute)) +
+  geom_density(color = NA,alpha = 0.5) +
+  xlab("Total Steps") + scale_fill_manual(values=c(No = 'red',Yes = 'green'))
+comphist
 
 # Analysis to answer question 4 in assignment ==================
 
@@ -123,5 +143,11 @@ lines4 <- ggplot(dt4, aes(x = Interval, y = Steps, group=1)) +
   geom_line() +
   scale_x_datetime(labels = date_format("%H:%M")) +
   facet_grid(daytype ~ .)
+
+png(filename = '.\\figure\\q4lines.png')
 lines4
+dev.off()
+
+knit2html('PA1_template.Rmd')
+browseURL('PA1_template.html')
 
